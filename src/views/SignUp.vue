@@ -110,9 +110,8 @@ import { ErrorMessage, Field, Form } from 'vee-validate'
 import * as Yup from 'yup'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { Actions, Mutations } from '@/store/enums/StoreEnums'
+import { Actions } from '@/store/enums/StoreEnums'
 import Swal from 'sweetalert2'
-import { Action } from 'vuex-module-decorators'
 
 export default defineComponent({
   name: 'sign-up',
@@ -123,7 +122,6 @@ export default defineComponent({
   },
   setup () {
     const store = useStore()
-    const router = useRouter()
 
     const submitButton = ref<HTMLElement | null>(null)
 
