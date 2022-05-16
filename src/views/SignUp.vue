@@ -1,6 +1,9 @@
 <template>
-    <div class='vue-tempalte'>
+    <div class='vue-tempalte bg-dark p-5 rounded'>
         <Form
+        novalidate="novalidate"
+        id="kt_login_signup_form"
+        @submit="onSubmitRegister"
         :validation-schema='registration'
         >
             <h3 class='text-white'>Create a new account </h3>
@@ -25,6 +28,7 @@
             <div class='form-group pb-3'>
                 <p class='form-label fw-bolder text-light fs-6'>Username</p>
                 <Field type='text' class='bg-secondary text-white form-control form-control-lg' name='username' placeholder='' />
+                <p class='form-label text-secondary fs-6'>Username requires 3 to 20 characters using letters, digits and optionally a single punctuation _ character.</p>
                 <div class='fv-plugins-message-container'>
                   <div class='fv-help-block'>
                     <ErrorMessage name='username' class="text-danger" />
@@ -47,6 +51,7 @@
                     name="passwd"
                     autocomplete="off"
                   />
+                  <p class='text-secondary'>Password must be at least 8 characters long, contain one lowercase letter, contain one uppercase letter and include at lease one number(0-9)</p>
                   <div class="fv-plugins-message-container">
                     <div class="fv-help-block">
                       <ErrorMessage name="passwd" class='text-danger' />
@@ -84,19 +89,17 @@
               <!--end::Wrapper-->
             </div>
 
-            <!-- <div class='form-group pb-3'>
-                <p class='text-white'>Confirm Password</p>
-                <Field type='password' class='bg-secondary text-white form-control form-control-lg' name='cpassword' />
-                <div class='fv-plugins-message-container'>
-                  <div class='fv-help-block'>
-                    <ErrorMessage name='cpassword' class="text-danger" />
-                  </div>
-                </div>
-            </div> -->
-            <button type='submit' class='btn-light btn-dark btn-lg btn-block'>Sign Up</button>
-            <p class='forgot-password text-right mt-2 mb-4'>
-                <router-link to='/forgot-password'>Forgot password ?</router-link>
-            </p>
+            <div class='form-group pb-3 d-flex'>
+              <input type="checkbox" class=' me-2 check' />
+              <p class="text-white">I want to receive emails from VenewLive and its partners about upcoming shows and information.</p>
+            </div>
+
+            <div class='form-group pb-3 d-flex'>
+              <input type="checkbox" class=' me-2 check' />
+              <p class="text-white">By submitting this form I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Notice</a></p>
+            </div>
+
+            <button type='submit' class='btn btn-lg btn-primary'>Sign Up</button>
         </Form>
     </div>
 </template>
@@ -107,11 +110,12 @@ import { ErrorMessage, Field, Form } from 'vee-validate'
 import * as Yup from 'yup'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { Actions } from '@/store/enums/StoreEnums'
+import { Actions, Mutations } from '@/store/enums/StoreEnums'
 import Swal from 'sweetalert2'
+import { Action } from 'vuex-module-decorators'
 
 export default defineComponent({
-  name: 'HomeView',
+  name: 'sign-up',
   components: {
     Field,
     Form,
@@ -124,32 +128,31 @@ export default defineComponent({
     const submitButton = ref<HTMLElement | null>(null)
 
     const registration = Yup.object().shape({
-      username: Yup.string().required().label('User Name'),
+      username: Yup.string().matches(/^(?=[a-zA-Z0-9._]{3,20}$)(?!.*[_.]{2})[^_.].*[^_.]$/, 'Must Contain at least 3 Characters and at most 20 Characters, using Letters, Digits and one single punctuation _Character').required(),
       email: Yup.string().min(4).required().email().label('Email'),
       emailconfirm: Yup.string().min(4).required().email().oneOf([Yup.ref('email'), null], 'Emails must match').label('Confirm Email'),
-      passwd: Yup.string().min(4).required().label('Password'),
+      passwd: Yup.string().min(8).required('Please Enter your password').matches(
+        /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/,
+        'Must Contain 8 Characters, One Uppercase, One Lowercase, One Number and one special case Character'
+      ),
       cpasswd: Yup.string()
-        .min(4)
+        .min(8)
         .required()
         .oneOf([Yup.ref('passwd'), null], 'Passwords must match')
         .label('Password Confirmation')
     })
 
     const onSubmitRegister = (values: any) => {
-      // Clear existing errors
-      store.dispatch(Actions.LOGOUT)
-
       // Activate indicator
       submitButton.value?.setAttribute('data-kt-indicator', 'on')
 
-      // Dummy delay
+      console.log(store)
       setTimeout(() => {
         // Send login request
-        store
-          .dispatch(Actions.REGISTER, values)
+        store.dispatch(Actions.REGISTER, values)
           .then(() => {
             Swal.fire({
-              text: 'All is cool! Now you submit this form',
+              text: 'Username: ' + values.username + ', email: ' + values.email,
               icon: 'success',
               buttonsStyling: false,
               confirmButtonText: 'Ok, got it!',
@@ -158,7 +161,6 @@ export default defineComponent({
               }
             }).then(function () {
               // Go to page after successfully login
-              router.push({ name: 'dashboard' })
             })
           })
           .catch(() => {
@@ -174,7 +176,8 @@ export default defineComponent({
           })
 
         submitButton.value?.removeAttribute('data-kt-indicator')
-      }, 2000)
+      }, 1000)
+      // Dummy delay
     }
 
     return {

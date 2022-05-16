@@ -77,3 +77,8 @@
   .vue-tempalte p {
       text-align: left;
   }
+
+  .check {
+      width: 20px;
+      height: 20px;
+  }
